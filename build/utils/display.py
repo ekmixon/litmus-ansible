@@ -47,7 +47,7 @@ if getattr(C, 'DEFAULT_LOG_PATH'):
         logging.basicConfig(filename=path, level=logging.DEBUG, format='%(asctime)s %(name)s %(message)s')
         mypid = str(os.getpid())
         user = getpass.getuser()
-        logger = logging.getLogger("p=%s u=%s | " % (mypid, user))
+        logger = logging.getLogger(f"p={mypid} u={user} | ")
         for handler in logging.root.handlers:
             handler.addFilter(FilterBlackList(getattr(C, 'DEFAULT_LOG_FILTER', [])))
     else:
@@ -82,7 +82,7 @@ class Display:
             try:
                 cmd = subprocess.Popen([self.b_cowsay, "-l"], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
                 (out, err) = cmd.communicate()
-                self.cows_available = set([to_text(c) for c in out.split()])
+                self.cows_available = {to_text(c) for c in out.split()}
                 if C.ANSIBLE_COW_WHITELIST:
                     self.cows_available = set(C.ANSIBLE_COW_WHITELIST).intersection(self.cows_available)
             except:
@@ -113,11 +113,7 @@ class Display:
             msg = stringc(msg, color)
 
         if not log_only:
-            if not msg.endswith(u'\n'):
-                msg2 = msg + u'\n'
-            else:
-                msg2 = msg
-
+            msg2 = msg if msg.endswith(u'\n') else msg + u'\n'
             msg2 = to_bytes(msg2, encoding=self._output_encoding(stderr=stderr))
             if sys.version_info >= (3,):
                 # Convert back to text string on python3
@@ -127,11 +123,7 @@ class Display:
 
             # Note: After Display() class is refactored need to update the log capture
             # code in 'bin/ansible-connection' (and other relevant places).
-            if not stderr:
-                fileobj = sys.stdout
-            else:
-                fileobj = sys.stderr
-
+            fileobj = sys.stderr if stderr else sys.stdout
             fileobj.write(msg2)
 
             try:
@@ -187,7 +179,7 @@ class Display:
             if host is None:
                 self.display(msg, color=C.COLOR_VERBOSE)
             else:
-                self.display("<%s> %s" % (host, msg), color=C.COLOR_VERBOSE, screen_only=True)
+                self.display(f"<{host}> {msg}", color=C.COLOR_VERBOSE, screen_only=True)
 
     def deprecated(self, msg, version=None, removed=False):
         ''' used to print out a deprecation message.'''
@@ -195,15 +187,16 @@ class Display:
         if not removed and not C.DEPRECATION_WARNINGS:
             return
 
-        if not removed:
-            if version:
-                new_msg = "[DEPRECATION WARNING]: %s. This feature will be removed in version %s." % (msg, version)
-            else:
-                new_msg = "[DEPRECATION WARNING]: %s. This feature will be removed in a future release." % (msg)
-            new_msg = new_msg + " Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.\n\n"
-        else:
+        if removed:
             raise AnsibleError("[DEPRECATED]: %s.\nPlease update your playbooks." % msg)
 
+        new_msg = (
+            f"[DEPRECATION WARNING]: {msg}. This feature will be removed in version {version}."
+            if version
+            else f"[DEPRECATION WARNING]: {msg}. This feature will be removed in a future release."
+        )
+
+        new_msg = new_msg + " Deprecation warnings can be disabled by setting deprecation_warnings=False in ansible.cfg.\n\n"
         wrapped = textwrap.wrap(new_msg, self.columns, drop_whitespace=False)
         new_msg = "\n".join(wrapped) + "\n"
 
@@ -267,7 +260,7 @@ class Display:
             wrapped = textwrap.wrap(new_msg, self.columns)
             new_msg = u"\n".join(wrapped) + u"\n"
         else:
-            new_msg = u"ERROR! %s" % msg
+            new_msg = f"ERROR! {msg}"
         if new_msg not in self._errors:
             self.display(new_msg, color=C.COLOR_ERROR, stderr=True)
             self._errors[new_msg] = 1
@@ -280,10 +273,7 @@ class Display:
             # to get rid of characters that are illegal in the user's locale
             prompt_string = to_text(prompt_string)
 
-        if private:
-            return getpass.getpass(prompt_string)
-        else:
-            return input(prompt_string)
+        return getpass.getpass(prompt_string) if private else input(prompt_string)
 
     def do_var_prompt(self, varname, private=True, prompt=None, encrypt=None, confirm=False, salt_size=None, salt=None, default=None):
 
@@ -293,16 +283,16 @@ class Display:
             do_prompt = self.prompt
 
             if prompt and default is not None:
-                msg = "%s [%s]: " % (prompt, default)
+                msg = f"{prompt} [{default}]: "
             elif prompt:
-                msg = "%s: " % prompt
+                msg = f"{prompt}: "
             else:
-                msg = 'input for %s: ' % varname
+                msg = f'input for {varname}: '
 
             if confirm:
                 while True:
                     result = do_prompt(msg, private)
-                    second = do_prompt("confirm " + msg, private)
+                    second = do_prompt(f"confirm {msg}", private)
                     if result == second:
                         break
                     self.display("***** VALUES ENTERED DO NOT MATCH ****")

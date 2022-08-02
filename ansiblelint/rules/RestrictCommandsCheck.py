@@ -9,6 +9,5 @@ class RestrictCommandsCheck(AnsibleLintRule):
   # pylint: disable=R0201
   def match(self, file, line):
     commands = line.strip().split()
-    if((len(commands) > 0) and ('awk' in commands) or ('cut' in commands) or ('sed' in commands) or ('grep' in commands)):
-      return True
-    return False
+    return ((len(commands) > 0) and ('awk' in commands) or 'cut' in commands
+            or 'sed' in commands or 'grep' in commands)

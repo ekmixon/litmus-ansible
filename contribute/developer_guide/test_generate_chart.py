@@ -5,19 +5,16 @@ import filecmp
 
 @pytest.fixture
 def jinja_template_dir():
-    j_path = './templates/'
-    return j_path
+    return './templates/'
 
 @pytest.fixture
 def config_content():
     c_path = 'attributes.yaml.sample'
-    config = yaml.safe_load(open(c_path))
-    return config
+    return yaml.safe_load(open(c_path))
 
 @pytest.fixture
 def expected_file_dir():
-    e_path = './test/templates/'
-    return e_path
+    return './test/templates/'
 
 def text_banner(template_file, expected_file):
     banner_text = "\n\n### TestInputs ###\n\nTemplate: %s\nExpectedFile: %s\n" %(
@@ -30,19 +27,18 @@ def verify_generated_artifact(template_file, config_file, expected_file):
     output_from_parsed_template = tmpl.render(config_file)
     with open('test_generated_artifact.yml', "w+") as f:
         f.write(output_from_parsed_template)
-    comparison_result = filecmp.cmp('test_generated_artifact.yml', expected_file)
-    return comparison_result
+    return filecmp.cmp('test_generated_artifact.yml', expected_file)
 
 def test_generate_csv(jinja_template_dir, config_content, expected_file_dir):
-    artifact_tmpl = jinja_template_dir + 'chartserviceversion.tmpl'
-    artifact_actual = expected_file_dir + 'chartserviceversion.expected'
+    artifact_tmpl = f'{jinja_template_dir}chartserviceversion.tmpl'
+    artifact_actual = f'{expected_file_dir}chartserviceversion.expected'
     text_banner(artifact_tmpl, artifact_actual)
     result = verify_generated_artifact(artifact_tmpl, config_content, artifact_actual)
     assert result
    
 def test_generate_package(jinja_template_dir, config_content, expected_file_dir):
-    artifact_tmpl = jinja_template_dir + 'package.tmpl'
-    artifact_actual = expected_file_dir + 'package.expected'
+    artifact_tmpl = f'{jinja_template_dir}package.tmpl'
+    artifact_actual = f'{expected_file_dir}package.expected'
     text_banner(artifact_tmpl, artifact_actual)
     result = verify_generated_artifact(artifact_tmpl, config_content, artifact_actual)
     assert result

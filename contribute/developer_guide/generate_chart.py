@@ -25,7 +25,7 @@ NOTES:
 
 # generate_csv creates the chartserviceversion manifest
 def generate_csv(csv_parent_path, csv_name, csv_config, litmus_env):
-    csv_filename = csv_parent_path + '/' + csv_name + '.' + 'chartserviceversion.yaml'
+    csv_filename = f'{csv_parent_path}/{csv_name}.chartserviceversion.yaml'
 
     # Load Jinja2 template
     template = litmus_env.get_template('./templates/chartserviceversion.tmpl')
@@ -35,7 +35,7 @@ def generate_csv(csv_parent_path, csv_name, csv_config, litmus_env):
 
 # generate_chart creates the experiment-custom-resource manifest
 def generate_chart(chart_parent_path, chart_config, litmus_env):
-    chart_filename = chart_parent_path + '/' + 'experiment.yaml'
+    chart_filename = f'{chart_parent_path}/experiment.yaml'
 
     # Load Jinja2 template
     template = litmus_env.get_template('./templates/experiment_custom_resource.tmpl')
@@ -45,7 +45,7 @@ def generate_chart(chart_parent_path, chart_config, litmus_env):
 
 # generate_rbac creates the rbac for the experiment
 def generate_rbac(chart_parent_path, chart_config, litmus_env):
-    rbac_filename = chart_parent_path + '/' + 'rbac.yaml'
+    rbac_filename = f'{chart_parent_path}/rbac.yaml'
 
     # Load Jinja2 template
     template = litmus_env.get_template('./templates/experiment_rbac.tmpl')
@@ -55,7 +55,7 @@ def generate_rbac(chart_parent_path, chart_config, litmus_env):
 
 # generate_engine creates the chaos engine for the experiment
 def generate_engine(chart_parent_path, chart_config, litmus_env):
-    engine_filename = chart_parent_path + '/' + 'engine.yaml'
+    engine_filename = f'{chart_parent_path}/engine.yaml'
 
     # Load Jinja2 template
     template = litmus_env.get_template('./templates/experiment_engine.tmpl')
@@ -65,7 +65,7 @@ def generate_engine(chart_parent_path, chart_config, litmus_env):
 
 # generate_job creates the experiment job manifest
 def generate_job(job_parent_path, job_name, job_config, litmus_env):
-    job_filename = job_parent_path + '/' + job_name + '_' + 'k8s_job.yml'
+    job_filename = f'{job_parent_path}/{job_name}_k8s_job.yml'
 
     # Load Jinja2 template
     template = litmus_env.get_template('./templates/experiment_k8s_job.tmpl')
@@ -75,7 +75,10 @@ def generate_job(job_parent_path, job_name, job_config, litmus_env):
 
 # generate_ansible_logic creates the ansible_logic manifest
 def generate_ansible_logic(ansible_logic_parent_path, ansible_logic_name, ansible_logic_config, litmus_env):
-    ansible_logic_filename = ansible_logic_parent_path + '/' + ansible_logic_name + '_' + 'ansible_logic.yml'
+    ansible_logic_filename = (
+        f'{ansible_logic_parent_path}/{ansible_logic_name}_ansible_logic.yml'
+    )
+
 
     # Load Jinja2 template
     template = litmus_env.get_template('./templates/experiment_ansible_logic.tmpl')
@@ -85,7 +88,8 @@ def generate_ansible_logic(ansible_logic_parent_path, ansible_logic_name, ansibl
 
 # generate_chaos_prerequisites creates the chaos_prerequisites manifest
 def generate_chaos_prerequisites(chaos_prerequisites_parent_path, chaos_prerequisites_name, chaos_prerequisites_config, litmus_env):
-    chaos_prerequisites_filename = chaos_prerequisites_parent_path + '/' + chaos_prerequisites_name + '_' + 'ansible_prerequisites.yml'
+    chaos_prerequisites_filename = f'{chaos_prerequisites_parent_path}/{chaos_prerequisites_name}_ansible_prerequisites.yml'
+
 
     # Load Jinja2 template
     template = litmus_env.get_template('./templates/experiment_ansible_prerequisites.tmpl')
@@ -95,10 +99,10 @@ def generate_chaos_prerequisites(chaos_prerequisites_parent_path, chaos_prerequi
 
 # generate_package creates the package manifest
 def generate_package(package_parent_path, package_name):
-    package_filename = package_parent_path + '/' + package_name + '.' + 'package.yaml'
+    package_filename = f'{package_parent_path}/{package_name}.package.yaml'
     print(package_filename)
     with open(package_filename, "w+") as f:
-        f.write('packageName: ' + package_name + '\n' + 'experiments:')
+        f.write(f'packageName: {package_name}' + '\n' + 'experiments:')
 
 def main():
     # Required Arguments 
@@ -126,22 +130,21 @@ def main():
     #env = Environment(loader = FileSystemLoader('./'), trim_blocks=True, lstrip_blocks=True, autoescape=True)
     env = Environment(loader = FileSystemLoader('./'), trim_blocks=True, lstrip_blocks=True, autoescape=select_autoescape(['yaml']))
 
-    # if generate_type is chart, only create the chart(top)-level CSV & package manifests 
+    # if generate_type is chart, only create the chart(top)-level CSV & package manifests
     if entity_type == 'chart':
-        chart_dir = litmus_root + '/experiments/' + entity_name
+        chart_dir = f'{litmus_root}/experiments/{entity_name}'
         if os.path.isdir(chart_dir) != True:
             os.makedirs(chart_dir)
-        generate_csv(chart_dir, entity_name, config, env) 
+        generate_csv(chart_dir, entity_name, config, env)
         generate_package(chart_dir, entity_name)
 
-    # if generate_type is experiment, create the litmusbook arefacts (job, playbook, cr)
     elif entity_type == 'experiment':
         # if chart_name is not explicitly provided, use "category" from attributes.yaml as chart
         if entity_parent is None:
             experiment_category = config['category']
-            chart_dir = litmus_root + '/experiments/' + experiment_category
+            chart_dir = f'{litmus_root}/experiments/{experiment_category}'
         else:
-            chart_dir = litmus_root + '/experiments/' + entity_parent
+            chart_dir = f'{litmus_root}/experiments/{entity_parent}'
         # if a folder with specified/derived chart name is not present, create it
         if os.path.isdir(chart_dir) != True:
             os.makedirs(chart_dir)
@@ -152,7 +155,7 @@ def main():
             generate_package(chart_dir, experiment_category)
 
         # create experiment folder inside the chart folder
-        experiment_dir = chart_dir + '/' + entity_name
+        experiment_dir = f'{chart_dir}/{entity_name}'
         if os.path.isdir(experiment_dir) != True:
             os.makedirs(experiment_dir)
 

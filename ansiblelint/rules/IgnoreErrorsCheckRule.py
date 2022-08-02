@@ -9,6 +9,4 @@ class IgnoreErrorsCheckRule(AnsibleLintRule):
   # pylint: disable=R0201
   def match(self, file, line):
     commands = line.strip().split()
-    if((len(commands) > 0) and ('ignore_errors:' in  commands)):
-      return True
-    return False
+    return len(commands) > 0 and 'ignore_errors:' in  commands
